@@ -9,8 +9,6 @@ dnl Make sure anyone changing configure.ac/Makefile.am has a clue
 AM_MAINTAINER_MODE
 
 dnl Checks for programs
-AC_PROG_CC_STDC
-
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_RANLIB
@@ -18,7 +16,6 @@ AC_PROG_CXX
 AC_OPENMP
 
 dnl Checks for header files
-AC_HEADER_STDC
 AC_CHECK_HEADERS([sys/endian.h sys/param.h syslog.h])
 # sys/sysctl.h requires sys/types.h on FreeBSD
 # sys/sysctl.h requires sys/param.h on OpenBSD
