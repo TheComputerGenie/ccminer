@@ -61,8 +61,8 @@ endif
 ccminer_LDADD += -lcuda
 
 nvcc_ARCH :=
-#nvcc_ARCH += -gencode=arch=compute_61,code=\"sm_61,compute_61\"
-nvcc_ARCH += -gencode=arch=compute_52,code=\"sm_52,compute_52\"
+nvcc_ARCH += -gencode=arch=compute_61,code=\"sm_61,compute_61\"
+#nvcc_ARCH += -gencode=arch=compute_52,code=\"sm_52,compute_52\" #Maxwell is deprecated from CUDA 11.6 onwards
 #nvcc_ARCH += -gencode=arch=compute_50,code=\"sm_50,compute_50\"
 #nvcc_ARCH += -gencode=arch=compute_35,code=\"sm_35,compute_35\"
 #nvcc_ARCH += -gencode=arch=compute_30,code=\"sm_30,compute_30\"
@@ -72,7 +72,7 @@ nvcc_FLAGS += $(JANSSON_INCLUDES)
 
 # we're now targeting all major compute architectures within one binary.
 .cu.o:
-	$(NVCC) $(nvcc_FLAGS) --maxrregcount=128 -o $@ -c $<
+	$(NVCC) $(nvcc_FLAGS) --maxrregcount=56 -o $@ -c $<
 
 
 

@@ -1,7 +1,6 @@
-AC_INIT([ccminerGPU], [3.8.3], [], [ccminer], [http://github.com/monkins1010/ccminer])
+AC_INIT([ccminer], [3.8.3], [http://github.com/monkins1010/ccminer/issues], [ccminer], [http://github.com/monkins1010/ccminer])
 
 AC_PREREQ([2.59c])
-AC_CANONICAL_SYSTEM
 AC_CONFIG_SRCDIR([ccminer.cpp])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADERS([ccminer-config.h])
@@ -10,8 +9,8 @@ dnl Make sure anyone changing configure.ac/Makefile.am has a clue
 AM_MAINTAINER_MODE
 
 dnl Checks for programs
-AC_PROG_CC_C99
-AC_PROG_GCC_TRADITIONAL
+AC_PROG_CC_STDC
+
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_RANLIB
@@ -93,8 +92,8 @@ else
 	JANSSON_LIBS=-ljansson
 fi
 
-LIBCURL_CHECK_CONFIG(, 7.15.2, ,
-  [AC_MSG_ERROR([Missing required libcurl >= 7.15.2])])
+LIBCURL_CHECK_CONFIG(, 7.81.0, ,
+  [AC_MSG_ERROR([Missing required libcurl >= 7.81.0])])
 
 AC_SUBST(JANSSON_LIBS)
 AC_SUBST(PTHREAD_FLAGS)
