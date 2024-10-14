@@ -1669,9 +1669,9 @@ static bool json_object_set_error(json_t *result, int code, const char *msg)
 static bool stratum_benchdata(json_t *result, json_t *params, int thr_id)
 {
 	char algo[64] = { 0 };
-	char vid[32], arch[8], driver[32];
+	char vid[32];
+	char arch[32], driver[64], os[16]; // Increased size to accommodate larger outputs
 	char *card;
-	char os[8];
 	uint32_t watts = 0, plimit = 0;
 	int dev_id = device_map[thr_id];
 	int cuda_ver = cuda_version();
@@ -1702,13 +1702,13 @@ static bool stratum_benchdata(json_t *result, json_t *params, int thr_id)
 	card = device_name[dev_id];
 	cgpu->khashes = stats_get_speed(thr_id, 0.0) / 1000.0;
 
-	sprintf(vid, "%04hx:%04hx", cgpu->gpu_vid, cgpu->gpu_pid);
-	sprintf(arch, "%d", (int) cgpu->gpu_arch);
+	snprintf(vid, sizeof(vid), "%04hx:%04hx", cgpu->gpu_vid, cgpu->gpu_pid);
+	snprintf(arch, sizeof(arch), "%d", (int) cgpu->gpu_arch);
 	if (cuda_arch[dev_id] > 0 && cuda_arch[dev_id] != cgpu->gpu_arch) {
 		// if binary was not compiled for the highest cuda arch, add it
-		snprintf(arch, 8, "%d@%d", (int) cgpu->gpu_arch, cuda_arch[dev_id]);
+		snprintf(arch, sizeof(arch), "%d@%d", (int) cgpu->gpu_arch, cuda_arch[dev_id]);
 	}
-	snprintf(driver, 32, "CUDA %d.%d %s", cuda_ver/1000, (cuda_ver%1000) / 10, driver_version);
+	snprintf(driver, sizeof(driver), "CUDA %d.%d %s", cuda_ver / 1000, (cuda_ver % 1000) / 10, driver_version);
 	driver[31] = '\0';
 
 	val = json_object();
