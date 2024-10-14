@@ -10,7 +10,7 @@
 */
 
 #include <ccminer-config.h>
-
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -59,7 +59,7 @@ BOOL WINAPI ConsoleHandler(DWORD);
 #define LP_SCANTIME		60
 #define HEAVYCOIN_BLKHDR_SZ		84
 #define MNR_BLKHDR_SZ 80
-
+#include "cuda_runtime_api.h"
 #include "nvml.h"
 #ifdef USE_WRAPNVML
 nvml_handle *hnvml = NULL;
@@ -3742,7 +3742,13 @@ int main(int argc, char *argv[])
 		num_cpus = 1;
 
 	// number of gpus
-	active_gpus = 1;
+    int deviceCount = 0;
+    cudaError_t error = cudaGetDeviceCount(&deviceCount);
+    if (error != cudaSuccess) {
+        std::cerr << "Error getting device count: " << cudaGetErrorString(error) << std::endl;
+        return -1;
+    }
+	active_gpus = deviceCount;
 
 	for (i = 0; i < MAX_GPUS; i++) {
 		device_map[i] = i % active_gpus;
