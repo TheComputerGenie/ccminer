@@ -20,8 +20,6 @@ compile
 config.log
 config.status
 config.status.lineno
-config.guess
-config.sub
 
 mingw32-config.cache
 
