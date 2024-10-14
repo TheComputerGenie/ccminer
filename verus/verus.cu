@@ -57,6 +57,7 @@ static __constant__  uint32_t saes_table[4][256] = { saes_data(saes_u0), saes_da
 
 
 typedef uint4 uint128m;
+uint128m tmp; // used by MIX2
 #define GPU_DEBUG
 #define VERUS_KEY_SIZE 8832
 #define VERUS_KEY_SIZE128 552
@@ -370,7 +371,7 @@ __device__    __forceinline__  uint128m _mm_mulhrs_epi16_emu(uint128m _a, uint12
 
 	int32_t po;
 	int16_t *a = (int16_t*)&_a, *b = (int16_t*)&_b;
-#pragma nounroll
+#pragma unroll(1)
 	for (int i = 0; i < 8; i++)
 	{
 		asm("mad.lo.s32 %0, %1, %2, 16384; ": "=r"(po) : "r"((int32_t)a[i]), "r"((int32_t)b[i]));
@@ -588,7 +589,6 @@ __device__   __forceinline__  void case_14(uint128m &prand, uint128m &prandex, c
 {
 	// we'll just call this one the monkins loop, inspired by Chris
 	const uint128m *buftmp = pbuf - ((selector & 1) ? 1 : -1);
-	uint128m tmp; // used by MIX2
 
 	uint64_t rounds = selector >> 61; // loop randomly between 1 and 8 times
 	uint128m *rc = &randomsource[prand_idx];
