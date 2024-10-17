@@ -1,1 +1,1 @@
-./ccminer -a verus -o stratum+tcp://pool.verus.io:9999 -u REoPcdGXthL5yeTCrJtrQv5xhYTknbFbec.bob -p d=4 -i 21
+./ccminerGPU -a verus -o stratum+tcp://192.168.1.246:9998 -u RCGxKMDxZcBGRZkxvgCRAXGpiQFt8wU7Wq.amdg -p x -d 0,1 -i 20

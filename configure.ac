@@ -1,19 +1,34 @@
 AC_INIT([ccminer], [3.8.3], [http://github.com/monkins1010/ccminer/issues], [ccminer], [http://github.com/monkins1010/ccminer])
 
-AC_PREREQ([2.59c])
+AC_PREREQ([2.71])
 AC_CONFIG_SRCDIR([ccminer.cpp])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADERS([ccminer-config.h])
 
 dnl Make sure anyone changing configure.ac/Makefile.am has a clue
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE([enable])
 
 dnl Checks for programs
 AM_PROG_CC_C_O
+AC_PROG_CXX
 AM_PROG_AS
 AC_PROG_RANLIB
-AC_PROG_CXX
 AC_OPENMP
+
+dnl I has a clue
+CXXFLAGS="-O2 -std=c++17"
+
+AC_COMPILE_IFELSE([
+  AC_LANG_SOURCE([[ int main() { return 0; } ]])
+], [
+  CFLAGS="$CFLAGS -falign-functions=16 -falign-jumps=16 -falign-labels=16"
+], [
+  AC_MSG_WARN([Compiler does not support alignment flags])
+])
+CFLAGS="$CFLAGS -D_REENTRANT"
+
+AC_SUBST(CFLAGS)
+AC_MSG_NOTICE([Using compiler flags: $CFLAGS])
 
 dnl Checks for header files
 AC_CHECK_HEADERS([sys/endian.h sys/param.h syslog.h])
@@ -126,20 +141,26 @@ AC_ARG_WITH([nvml],
 
 AM_CONDITIONAL([HAVE_NVML], [test -n "$with_nvml"])
 
-NVCC="nvcc"
-
-if test -n "$with_cuda" ; then
+# Check if --with-cuda was provided
+if test -n "$with_cuda"; then
   CUDA_INCLUDES="-I$with_cuda/include"
   CUDA_LIBS="-lcudart"
   CUDA_LDFLAGS="-L$with_cuda/lib$SUFFIX"
-  if test -x "$with_cuda/bin/nvcc" ; then
+  if test -x "$with_cuda/bin/nvcc"; then
     NVCC="$with_cuda/bin/nvcc"
+    AC_MSG_NOTICE([nvcc: $NVCC])
+  else
+    AC_MSG_ERROR([nvcc not found in $with_cuda/bin])
   fi
 else
-  CUDA_INCLUDES="-I/usr/local/cuda/include"
+  # Set a default value for with_cuda
+  with_cuda="/usr/local/cuda"
+  CUDA_INCLUDES="-I$with_cuda/include"
   CUDA_LIBS="-lcudart -static-libstdc++"
-  CUDA_LDFLAGS="-L/usr/local/cuda/lib$SUFFIX"
+  CUDA_LDFLAGS="-L$with_cuda/lib$SUFFIX"
+  NVCC="$with_cuda/bin/nvcc"
 fi
+
 
 if test -n "$with_nvml" ; then
   NVML_LIBPATH=$with_nvml

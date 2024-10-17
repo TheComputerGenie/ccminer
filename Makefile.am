@@ -8,14 +8,13 @@ JANSSON_INCLUDES=
 endif
 
 EXTRA_DIST		= autogen.sh README.md README.txt LICENSE.txt \
-			  ccminer.sln ccminer.vcxproj ccminer.vcxproj.filters \
 			  compat/gettimeofday.c compat/getopt/getopt_long.c
 
 SUBDIRS = compat
 
-bin_PROGRAMS = ccminer
+bin_PROGRAMS = ccminerGPU ccminerCPU
 
-ccminer_SOURCES	= elist.h miner.h compat.h \
+ccminerCPU_SOURCES	= api.cpp elist.h miner.h compat.h \
 			  compat/inttypes.h compat/stdbool.h compat/unistd.h \
 			  compat/sys/time.h compat/getopt/getopt.h \
 			  crc32.c hefty1.c \
@@ -24,59 +23,40 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  sph/cubehash.c sph/echo.c sph/luffa.c sph/sha2.c sph/shavite.c sph/simd.c \
 			  sph/hamsi.c sph/hamsi_helper.c sph/streebog.c \
 			  sph/shabal.c sph/whirlpool.c sph/sha2big.c sph/haval.c \
-			  sph/ripemd.c sph/sph_sha2.c \
-			  api.cpp hashlog.cpp nvml.cpp stats.cpp sysinfos.cpp cuda.cpp \
-			  nvsettings.cpp \
+			  sph/ripemd.c sph/sph_sha2.c nvsettings.cpp \
+			  hashlog.cpp nvml.cpp stats.cpp sysinfos.cpp cuda.cpp \
 			  equi/equi-stratum.cpp equi/equi.cpp equi/blake2/blake2bx.cpp \
-			  cuda_checkhash.cu \
-			verus/verus.cu verus/verusscan.cpp \
-			verus/verus_clhash.cpp verus/verus_clhash_portable.cpp verus/verus_hash.cpp \
-			verus/haraka.c verus/haraka_portable.c
-
-# scrypt
-
+			  verus/verusscan.cpp \
+			  verus/verus_clhash.cpp verus/verus_clhash_portable.cpp verus/verus_hash.cpp \
+			  verus/haraka.c verus/haraka_portable.c
 
 if HAVE_NVML
 nvml_defs = -DUSE_WRAPNVML
 nvml_libs = -ldl
 endif
 
-if HAVE_WINDOWS
-ccminer_SOURCES += compat/winansi.c
-endif
+ccminerGPU_SOURCES = $(ccminerCPU_SOURCES) cuda_checkhash.cu verus/verus.cu
 
-ccminer_LDFLAGS  = $(PTHREAD_FLAGS) @CUDA_LDFLAGS@
-ccminer_LDADD    = @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@ @CUDA_LIBS@ @OPENMP_CFLAGS@ @LIBS@ $(nvml_libs)
-ccminer_CPPFLAGS = @LIBCURL_CPPFLAGS@ @OPENMP_CFLAGS@ $(CPPFLAGS) $(PTHREAD_FLAGS) -mpclmul -msse4 -msse4.1 -msse4.2 -mssse3 -maes -static -fno-strict-aliasing $(JANSSON_INCLUDES) $(DEF_INCLUDES) $(nvml_defs)
+ccminerGPU_LDFLAGS  = $(PTHREAD_FLAGS) @CUDA_LDFLAGS@
+ccminerCPU_LDFLAGS  = $(ccminerGPU_LDFLAGS)
 
-if HAVE_OSX
-ccminer_CPPFLAGS += -I/usr/local/llvm/lib/clang/4.0.0/include
-ccminer_LDFLAGS += -L/usr/local/llvm/lib
-ccminer_LDADD += -lomp
-endif
+ccminerGPU_LDADD    = @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@ @CUDA_LIBS@ @OPENMP_CFLAGS@ @LIBS@ $(nvml_libs)
+ccminerCPU_LDADD    = $(ccminerGPU_LDADD)
 
-#ccminer_CPPFLAGS += -DUSE_LIBSODIUM
-#ccminer_LDFLAGS += -Lequi/lib
-#ccminer_LDADD += -lsodium
-ccminer_LDADD += -lcuda
+ccminerGPU_CPPFLAGS = @LIBCURL_CPPFLAGS@ @OPENMP_CFLAGS@ $(CPPFLAGS) $(PTHREAD_FLAGS) -mpclmul -msse4 -msse4.1 -msse4.2 -mssse3 -maes
+ccminerGPU_CPPFLAGS += -static -fno-strict-aliasing $(JANSSON_INCLUDES) $(DEF_INCLUDES) $(nvml_defs)
 
-nvcc_ARCH :=
-nvcc_ARCH += -gencode=arch=compute_61,code=\"sm_61,compute_61\"
-#nvcc_ARCH += -gencode=arch=compute_52,code=\"sm_52,compute_52\" #Maxwell is deprecated from CUDA 11.6 onwards
-#nvcc_ARCH += -gencode=arch=compute_50,code=\"sm_50,compute_50\"
-#nvcc_ARCH += -gencode=arch=compute_35,code=\"sm_35,compute_35\"
-#nvcc_ARCH += -gencode=arch=compute_30,code=\"sm_30,compute_30\"
+ccminerCPU_CPPFLAGS = $(ccminerGPU_CPPFLAGS)
 
+ccminerGPU_LDADD += -lcuda
+
+nvcc_ARCH = -gencode=arch=compute_61,code=sm_61
 nvcc_FLAGS = $(nvcc_ARCH) @CUDA_INCLUDES@ -I. @CUDA_CFLAGS@
-nvcc_FLAGS += $(JANSSON_INCLUDES) 
+nvcc_FLAGS += $(JANSSON_INCLUDES) --ptxas-options="-v"
 
-# we're now targeting all major compute architectures within one binary.
 .cu.o:
-	$(NVCC) $(nvcc_FLAGS) --maxrregcount=56 -o $@ -c $<
+	$(NVCC) $(nvcc_FLAGS) --maxrregcount=96 -o $@ -c $<
 
-
-
-
-
-
-
+gitclean:
+	make distclean
+	git clean -fxd
