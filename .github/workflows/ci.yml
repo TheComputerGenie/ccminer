@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - Verus.1080Ti
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up dependencies
+      run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libjansson-dev
+
+    - name: Install CUDA
+      run: |
+        sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+        sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+        sudo sh -c 'echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
+        sudo apt-get update
+        sudo apt-get -y install cuda
+
+    - name: Run build script
+      run: ./build.sh
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ccminerGPU
+        path: ccminerGPU
+        compression-level: 0
+        retention-days: 1
