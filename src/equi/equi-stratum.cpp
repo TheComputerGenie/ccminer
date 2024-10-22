@@ -13,11 +13,19 @@
 extern struct stratum_ctx stratum;
 extern pthread_mutex_t stratum_work_lock;
 
-// ZEC uses a different scale to compute diff... 
-// sample targets to diff (stored in the reverse byte order in work->target)
-// 0007fff800000000000000000000000000000000000000000000000000000000 is stratum diff 32
-// 003fffc000000000000000000000000000000000000000000000000000000000 is stratum diff 4
-// 00ffff0000000000000000000000000000000000000000000000000000000000 is stratum diff 1
+/**
+ * ZEC uses a different scale to compute diff... 
+ * sample targets to diff (stored in the reverse byte order in work->target)
+ * 0007fff800000000000000000000000000000000000000000000000000000000 is stratum diff 32
+ * 003fffc000000000000000000000000000000000000000000000000000000000 is stratum diff 4
+ * 00ffff0000000000000000000000000000000000000000000000000000000000 is stratum diff 1
+ */
+/**
+ * Converts a target to difficulty for Equihash.
+ *
+ * @param target The target value.
+ * @return The difficulty.
+ */
 double target_to_diff_equi(uint32_t* target)
 {
 	uchar* tgt = (uchar*) target;
@@ -33,6 +41,12 @@ double target_to_diff_equi(uint32_t* target)
 		return (double)0xffff0000UL/m;
 }
 
+/**
+ * Converts difficulty to target for Equihash.
+ *
+ * @param target The target value (output).
+ * @param diff The difficulty.
+ */
 void diff_to_target_equi(uint32_t *target, double diff)
 {
 	uint64_t m;
@@ -53,7 +67,12 @@ void diff_to_target_equi(uint32_t *target, double diff)
 	}
 }
 
-/* compute nbits to get the network diff */
+/**
+ * Computes the network difficulty using nbits.
+ *
+ * @param work The work structure.
+ * @return The network difficulty.
+ */
 double equi_network_diff(struct work *work)
 {
 	//KMD bits: "1e 015971",
@@ -78,6 +97,12 @@ double equi_network_diff(struct work *work)
 	return d;
 }
 
+/**
+ * Sets the target for the given work based on difficulty.
+ *
+ * @param work The work structure.
+ * @param diff The difficulty.
+ */
 void equi_work_set_target(struct work* work, double diff)
 {
 	// target is given as data by the equihash stratum
@@ -88,6 +113,13 @@ void equi_work_set_target(struct work* work, double diff)
 	work->targetdiff = diff;
 }
 
+/**
+ * Sets the target for the stratum context from JSON parameters.
+ *
+ * @param sctx The stratum context.
+ * @param params The JSON parameters.
+ * @return True if successful, false otherwise.
+ */
 bool equi_stratum_set_target(struct stratum_ctx *sctx, json_t *params)
 {
 	uint8_t target_bin[32], target_be[32];
@@ -116,6 +148,13 @@ bool equi_stratum_set_target(struct stratum_ctx *sctx, json_t *params)
 	return true;
 }
 
+/**
+ * Handles stratum notify messages.
+ *
+ * @param sctx The stratum context.
+ * @param params The JSON parameters.
+ * @return True if successful, false otherwise.
+ */
 bool equi_stratum_notify(struct stratum_ctx *sctx, json_t *params)
 {
 	const char *job_id, *version, *prevhash, *coinb1, *coinb2, *nbits, *stime, *solution = NULL;
@@ -189,7 +228,14 @@ out:
 	return ret;
 }
 
-// equihash stratum protocol is not standard, use client.show_message to pass block height
+/**
+ * Handles stratum show message protocol for Equihash (use client.show_message to pass block height).
+ *
+ * @param sctx The stratum context.
+ * @param id The JSON id.
+ * @param params The JSON parameters.
+ * @return True if successful, false otherwise.
+ */
 bool equi_stratum_show_message(struct stratum_ctx *sctx, json_t *id, json_t *params)
 {
 	char *s;
@@ -223,6 +269,13 @@ bool equi_stratum_show_message(struct stratum_ctx *sctx, json_t *id, json_t *par
 	return ret;
 }
 
+/**
+ * Stores the work solution for Equihash.
+ *
+ * @param work The work structure.
+ * @param hash The hash value.
+ * @param sol_data The solution data.
+ */
 void equi_store_work_solution(struct work* work, uint32_t* hash, void* sol_data)
 {
 	int nonce = work->valid_nonces-1;
@@ -232,7 +285,14 @@ void equi_store_work_solution(struct work* work, uint32_t* hash, void* sol_data)
 }
 
 #define JSON_SUBMIT_BUF_LEN (4*1024)
-// called by submit_upstream_work()
+
+/**
+ * Submits the work solution to the mining pool via stratum protocol (called by submit_upstream_work()).
+ *
+ * @param pool The pool information.
+ * @param work The work structure.
+ * @return True if successful, false otherwise.
+ */
 bool equi_stratum_submit(struct pool_infos *pool, struct work *work)
 {
 	char _ALIGN(64) s[JSON_SUBMIT_BUF_LEN];
