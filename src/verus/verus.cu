@@ -1,6 +1,6 @@
-#include <miner.h>
+#include <src/miner.h>
 
-#include <cuda_helper.h>
+#include <src/cuda_helper.h>
 
 
 

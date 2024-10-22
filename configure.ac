@@ -1,7 +1,7 @@
 AC_INIT([ccminer], [3.8.3], [http://github.com/monkins1010/ccminer/issues], [ccminer], [http://github.com/monkins1010/ccminer])
 
 AC_PREREQ([2.71])
-AC_CONFIG_SRCDIR([ccminer.cpp])
+AC_CONFIG_SRCDIR([src/ccminer.cpp])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_HEADERS([ccminer-config.h])
 
@@ -25,7 +25,7 @@ AC_COMPILE_IFELSE([
 ], [
   AC_MSG_WARN([Compiler does not support alignment flags])
 ])
-CFLAGS="$CFLAGS -D_REENTRANT"
+CFLAGS="$CFLAGS -D_REENTRANT -I$(top_srcdir)/src -I$(top_srcdir)/src/sph"
 
 AC_SUBST(CFLAGS)
 AC_MSG_NOTICE([Using compiler flags: $CFLAGS])
@@ -99,9 +99,9 @@ AM_CONDITIONAL([ARCH_x86_64], [test x$have_x86_64 = xtrue])
 
 if test x$request_jansson = xtrue
 then
-	JANSSON_LIBS="compat/jansson/libjansson.a"
+    JANSSON_LIBS="src/compat/jansson/libjansson.a"
 else
-	JANSSON_LIBS=-ljansson
+    JANSSON_LIBS=-ljansson
 fi
 
 LIBCURL_CHECK_CONFIG(, 7.81.0, ,
@@ -113,10 +113,10 @@ AC_SUBST(PTHREAD_LIBS)
 AC_SUBST(WS2_LIBS)
 
 AC_CONFIG_FILES([
-	Makefile
-	compat/Makefile
-	compat/jansson/Makefile
-	])
+    Makefile
+    src/compat/Makefile
+    src/compat/jansson/Makefile
+    ])
 
 dnl find out what version we are running
 ARCH=`uname -m`

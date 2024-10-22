@@ -1,51 +1,50 @@
 # allow to use Host cuda functions in C/C++
-DEF_INCLUDES = @CUDA_INCLUDES@
+DEF_INCLUDES = @CUDA_INCLUDES@ -I$(top_srcdir)/src -I$(top_srcdir)/src/sph
 
 if WANT_JANSSON
-JANSSON_INCLUDES= -I$(top_srcdir)/compat/jansson
+JANSSON_INCLUDES= -I$(top_srcdir)/src/compat/jansson
 else
 JANSSON_INCLUDES=
 endif
 
-EXTRA_DIST		= autogen.sh README.md README.txt LICENSE.txt \
-			  compat/gettimeofday.c compat/getopt/getopt_long.c
-
-SUBDIRS = compat
-
 bin_PROGRAMS = ccminerGPU ccminerCPU
 
-ccminerCPU_SOURCES	= api.cpp elist.h miner.h compat.h \
-			  compat/inttypes.h compat/stdbool.h compat/unistd.h \
-			  compat/sys/time.h compat/getopt/getopt.h \
-			  crc32.c hefty1.c \
-			  ccminer.cpp pools.cpp util.cpp bench.cpp bignum.cpp \
-			  sph/bmw.c sph/blake.c sph/groestl.c sph/jh.c sph/keccak.c sph/skein.c \
-			  sph/cubehash.c sph/echo.c sph/luffa.c sph/sha2.c sph/shavite.c sph/simd.c \
-			  sph/hamsi.c sph/hamsi_helper.c sph/streebog.c \
-			  sph/shabal.c sph/whirlpool.c sph/sha2big.c sph/haval.c \
-			  sph/ripemd.c sph/sph_sha2.c nvsettings.cpp \
-			  hashlog.cpp nvml.cpp stats.cpp sysinfos.cpp cuda.cpp \
-			  equi/equi-stratum.cpp equi/equi.cpp equi/blake2/blake2bx.cpp \
-			  verus/verusscan.cpp \
-			  verus/verus_clhash.cpp verus/verus_clhash_portable.cpp verus/verus_hash.cpp \
-			  verus/haraka.c verus/haraka_portable.c
+EXTRA_DIST = autogen.sh README.md README.txt LICENSE.txt \
+            src/compat/gettimeofday.c src/compat/getopt/getopt_long.c src/miner.h
+
+SUBDIRS = src/compat
+
+ccminerCPU_SOURCES = src/api.cpp src/elist.h src/miner.h src/compat.h \
+                     src/compat/inttypes.h src/compat/stdbool.h src/compat/unistd.h \
+                     src/compat/sys/time.h src/compat/getopt/getopt.h \
+                     src/crc32.c src/hefty1.c \
+                     src/ccminer.cpp src/pools.cpp src/util.cpp src/bench.cpp src/bignum.cpp \
+                     src/sph/bmw.c src/sph/blake.c src/sph/groestl.c src/sph/jh.c src/sph/keccak.c src/sph/skein.c \
+                     src/sph/cubehash.c src/sph/echo.c src/sph/luffa.c src/sph/sha2.c src/sph/shavite.c src/sph/simd.c \
+                     src/sph/hamsi.c src/sph/hamsi_helper.c src/sph/streebog.c \
+                     src/sph/shabal.c src/sph/whirlpool.c src/sph/sha2big.c src/sph/haval.c \
+                     src/sph/ripemd.c src/sph/sph_sha2.c src/nvsettings.cpp \
+                     src/hashlog.cpp src/nvml.cpp src/stats.cpp src/sysinfos.cpp src/cuda.cpp \
+                     src/equi/equi-stratum.cpp src/equi/equi.cpp src/equi/blake2/blake2bx.cpp \
+                     src/verus/verusscan.cpp \
+                     src/verus/verus_clhash.cpp src/verus/verus_clhash_portable.cpp src/verus/verus_hash.cpp \
+                     src/verus/haraka.c src/verus/haraka_portable.c
 
 if HAVE_NVML
 nvml_defs = -DUSE_WRAPNVML
 nvml_libs = -ldl
 endif
 
-ccminerGPU_SOURCES = $(ccminerCPU_SOURCES) cuda_checkhash.cu verus/verus.cu
+ccminerGPU_SOURCES = $(ccminerCPU_SOURCES) src/cuda_checkhash.cu src/verus/verus.cu
 
-ccminerGPU_LDFLAGS  = $(PTHREAD_FLAGS) @CUDA_LDFLAGS@
-ccminerCPU_LDFLAGS  = $(ccminerGPU_LDFLAGS)
+ccminerGPU_LDFLAGS	= $(PTHREAD_FLAGS) @CUDA_LDFLAGS@
+ccminerCPU_LDFLAGS	= $(ccminerGPU_LDFLAGS)
 
-ccminerGPU_LDADD    = @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@ @CUDA_LIBS@ @OPENMP_CFLAGS@ @LIBS@ $(nvml_libs)
-ccminerCPU_LDADD    = $(ccminerGPU_LDADD)
+ccminerGPU_LDADD	= @LIBCURL@ @JANSSON_LIBS@ @PTHREAD_LIBS@ @WS2_LIBS@ @CUDA_LIBS@ @OPENMP_CFLAGS@ @LIBS@ $(nvml_libs)
+ccminerCPU_LDADD	= $(ccminerGPU_LDADD)
 
-ccminerGPU_CPPFLAGS = @LIBCURL_CPPFLAGS@ @OPENMP_CFLAGS@ $(CPPFLAGS) $(PTHREAD_FLAGS) -mpclmul -msse4 -msse4.1 -msse4.2 -mssse3 -maes
+ccminerGPU_CPPFLAGS = @LIBCURL_CPPFLAGS@ @OPENMP_CFLAGS@ $(CPPFLAGS) $(PTHREAD_FLAGS) -I$(top_srcdir)/src -mpclmul -msse4 -msse4.1 -msse4.2 -mssse3 -maes
 ccminerGPU_CPPFLAGS += -static -fno-strict-aliasing $(JANSSON_INCLUDES) $(DEF_INCLUDES) $(nvml_defs)
-
 ccminerCPU_CPPFLAGS = $(ccminerGPU_CPPFLAGS)
 
 ccminerGPU_LDADD += -lcuda
