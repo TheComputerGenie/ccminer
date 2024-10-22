@@ -304,6 +304,7 @@ void equi_store_work_solution(struct work* work, uint32_t* hash, void* sol_data)
  * @param work The work structure.
  * @return True if successful, false otherwise.
  */
+#define JSON_SUBMIT_BUF_LEN (4*1024)
 bool equi_stratum_submit(struct pool_infos *pool, struct work *work)
 {
     char _ALIGN(64) s[JSON_SUBMIT_BUF_LEN];
